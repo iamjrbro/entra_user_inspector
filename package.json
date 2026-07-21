@@ -2,7 +2,7 @@
   "name": "entra-user-inspector",
   "version": "1.0.0",
   "description": "Ferramenta de linha de comando para consultar roles e grupos de um usuário no Microsoft Entra ID via Microsoft Graph API.",
-  "main": "src/app.js",
+  "main": "app.js",
   "type": "commonjs",
   "scripts": {
     "start": "node src/app.js",
