@@ -1,101 +1,28 @@
-/**
- * src/server.js
- * ---------------------------------------------------------------------------
- * Servidor web (Express) que expõe a mesma lógica de negócio da CLI
- * (keyvault.js -> auth.js -> graph.js -> user.js) como uma API HTTP, e
- * serve o front-end estático (pasta /public) com a interface visual.
- *
- * Nenhuma regra de negócio mora aqui: este arquivo só faz "tradução" entre
- * requisição HTTP e as funções de src/user.js, e cuida de erros -> status
- * code. Isso é o que permite reaproveitar a CLI (src/app.js) e a Web API
- * a partir do mesmo núcleo, sem duplicar lógica.
- * ---------------------------------------------------------------------------
- */
-
+const http = require('node:http');
+const fs = require('node:fs/promises');
+const path = require('node:path');
 require('dotenv').config();
-
-const path = require('path');
-const express = require('express');
-
-const {
-  buscarUsuarioPorUpn,
-  obterRolesEGruposDoUsuario,
-  classificarTipoDeGrupo,
-} = require('./user');
-
-const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Serve os arquivos estáticos do front-end (HTML/CSS/JS) da pasta /public.
-app.use(express.static(__dirname));
-app.use(express.json());
-
-// Mesma validação de formato usada na CLI, para dar feedback rápido sem
-// gastar uma chamada de rede com um UPN obviamente inválido.
-function upnPareceValido(upn) {
-  const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return regexEmail.test(upn);
-}
-
-/**
- * GET /api/user?upn=alguem@empresa.com
- * Retorna os dados do usuário, roles e grupos em JSON.
- */
-app.get('/api/user', async (req, res) => {
-  const upn = (req.query.upn || '').trim();
-
-  if (!upn) {
-    return res.status(400).json({ error: 'Informe o parâmetro "upn".' });
-  }
-
-  if (!upnPareceValido(upn)) {
-    return res.status(400).json({ error: 'Formato de e-mail (UPN) inválido.' });
-  }
-
+function createServer({demo = false, service} = {}) {
+ const assets = {'/':['index.html','text/html'],'/style.css':['style.css','text/css'],'/dashboard.js':['dashboard.js','text/javascript'],'/report.js':['report.js','text/javascript']};
+ return http.createServer(async(req,res)=>{
+  res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');
+  res.setHeader('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'");
+  const json=(status,body)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(body));};
   try {
-    const usuario = await buscarUsuarioPorUpn(upn);
-    const { roles, grupos } = await obterRolesEGruposDoUsuario(usuario.id);
-
-    // Adiciona o "tipo amigável" de cada grupo antes de devolver ao
-    // front-end, para a interface não precisar reimplementar essa regra.
-    const gruposComTipo = grupos.map((grupo) => ({
-      id: grupo.id,
-      displayName: grupo.displayName,
-      tipo: classificarTipoDeGrupo(grupo),
-    }));
-
-    const rolesFormatadas = roles.map((role) => ({
-      id: role.id,
-      displayName: role.displayName,
-    }));
-
-    res.json({
-      usuario: {
-        displayName: usuario.displayName,
-        email: usuario.mail || usuario.userPrincipalName,
-        objectId: usuario.id,
-      },
-      roles: rolesFormatadas,
-      grupos: gruposComTipo,
-      totais: {
-        roles: rolesFormatadas.length,
-        grupos: gruposComTipo.length,
-      },
-    });
-  } catch (erro) {
-    // erro.status vem de graph.js (traduzirErroGraph) quando o problema é
-    // do Microsoft Graph; caso contrário (ex.: falha no Key Vault/MSAL),
-    // usamos 500 como padrão.
-    const status = erro.status || 500;
-    res.status(status).json({ error: erro.message });
-  }
-});
-
-// Qualquer rota não reconhecida como API cai no index.html (SPA simples).
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-app.listen(PORT, () => {
-  console.log(`Entra User Inspector rodando em http://localhost:${PORT}`);
-});
+   if(req.method!=='GET')return json(405,{error:'Método não permitido.'});
+   const url=new URL(req.url,'http://localhost');
+   if(url.pathname==='/api/config')return json(200,{demo,configured:demo||['TENANT_ID','CLIENT_ID','KEYVAULT_URI','CLIENT_SECRET_NAME'].every(k=>Boolean(process.env[k]))});
+   if(url.pathname==='/api/user'){
+    const values=url.searchParams.getAll('upn'),upn=(values[0]||'').trim();
+    if(values.length!==1||upn.length>254||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(upn))return json(400,{error:'Informe um e-mail corporativo (UPN) válido.'});
+    if(demo){const sample=require('./demo.json');if(upn.toLowerCase()!==sample.usuario.email)return json(404,{error:'Na demonstração, consulte ana.silva@example.com.'});return json(200,{...sample,demonstracao:true,consultadoEm:new Date().toISOString()});}
+    const api=service||require('./user');const user=await api.buscarUsuarioPorUpn(upn);const {roles,grupos}=await api.obterRolesEGruposDoUsuario(user.id);
+    return json(200,{usuario:{displayName:user.displayName,email:user.mail||user.userPrincipalName,objectId:user.id},roles:roles.map(r=>({id:r.id,displayName:r.displayName})),grupos:grupos.map(g=>({id:g.id,displayName:g.displayName,tipo:api.classificarTipoDeGrupo(g)})),consultadoEm:new Date().toISOString(),demonstracao:false});
+   }
+   if(!assets[url.pathname])return json(404,{error:'Recurso não encontrado.'});
+   const [file,type]=assets[url.pathname];const body=await fs.readFile(path.join(__dirname,'public',file));res.writeHead(200,{'Content-Type':type+'; charset=utf-8'});res.end(body);
+  }catch(error){const status=Number.isInteger(error.status)&&error.status>=400&&error.status<=599?error.status:500;json(status,{error:status===500?'Falha na consulta. Confira a configuração do Azure e as permissões do aplicativo.':error.message});}
+ });
+}
+if(require.main===module){const demo=process.argv.includes('--demo'),port=process.env.PORT||3000;createServer({demo}).listen(port,process.env.HOST||'127.0.0.1',()=>console.log('Dashboard: http://localhost:'+port+(demo?' (DEMONSTRAÇÃO)':'')));}
+module.exports={createServer};

@@ -1,12 +1,14 @@
 {
   "name": "entra-user-inspector",
   "version": "1.0.0",
-  "description": "Ferramenta de linha de comando para consultar roles e grupos de um usuário no Microsoft Entra ID via Microsoft Graph API.",
-  "main": "app.js",
+  "description": "Dashboard de auditoria de identidade do Entra ID com relatórios HTML, PNG e JPG.",
+  "main": "server.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node app.js",
-    "test:auth": "node -e \"require('./src/auth').getAccessToken().then(() => console.log('OK: token obtido com sucesso')).catch(e => { console.error('FALHA:', e.message); process.exit(1); })\""
+    "start": "node server.js",
+    "demo": "node server.js --demo",
+    "test": "node --test",
+    "test:auth": "node -e \"require('./auth').getAccessToken().then(() => console.log('OK: token obtido com sucesso')).catch(e => { console.error('FALHA:', e.message); process.exit(1); })\""
   },
   "keywords": [
     "microsoft-graph",
@@ -22,5 +24,8 @@
     "@azure/msal-node": "^2.13.1",
     "axios": "^1.7.7",
     "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

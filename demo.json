@@ -1,0 +1,44 @@
+{
+  "usuario": {
+    "displayName": "Ana Silva",
+    "email": "ana.silva@example.com",
+    "objectId": "00000000-0000-0000-0000-000000000001"
+  },
+  "roles": [
+    {
+      "id": "demo-role-1",
+      "displayName": "Global Reader"
+    },
+    {
+      "id": "demo-role-2",
+      "displayName": "Security Reader"
+    }
+  ],
+  "grupos": [
+    {
+      "id": "demo-group-1",
+      "displayName": "Financeiro",
+      "tipo": "Security Group"
+    },
+    {
+      "id": "demo-group-2",
+      "displayName": "Equipe de operações",
+      "tipo": "Microsoft 365 Group"
+    },
+    {
+      "id": "demo-group-3",
+      "displayName": "Todos os colaboradores",
+      "tipo": "Microsoft 365 Group"
+    },
+    {
+      "id": "demo-group-4",
+      "displayName": "Comunicados internos",
+      "tipo": "Distribution List"
+    },
+    {
+      "id": "demo-group-5",
+      "displayName": "Segurança da informação",
+      "tipo": "Mail-Enabled Security Group"
+    }
+  ]
+}
