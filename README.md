@@ -4,16 +4,16 @@ Dashboard web para consultar identidades no Microsoft Entra ID e exportar audito
 
 ## Iniciar
 
-Requer Node.js 22 ou superior.
+Requer Node.js 22.13 ou superior.
 
     npm ci
     npm start
 
-Abra http://localhost:3000. Para experimentar sem Azure:
+Antes do modo real, configure autenticação e operadores autorizados conforme [AUTHENTICATION.md](AUTHENTICATION.md). Abra http://localhost:3000 para entrar ou criar sua conta. Para experimentar sem Azure:
 
     npm run demo
 
-Consulte ana.silva@example.com. A interface e os relatórios sinalizam que os dados são fictícios.
+Crie uma conta de teste na página de login e consulte ana.silva@example.com. A interface e os relatórios sinalizam que os dados são fictícios.
 
 ## Conectar ao tenant
 
@@ -34,10 +34,14 @@ O escopo é o mesmo das consultas originais via transitiveMemberOf, incluindo gr
 
 ## Hospedagem
 
-O servidor escuta em 127.0.0.1 por padrão. PORT altera a porta; HOST=0.0.0.0 permite hospedar em outro ambiente. Antes de expor o dashboard, configure autenticação na plataforma (por exemplo, App Service Authentication), pois as consultas usam permissões do aplicativo. Somente os arquivos públicos explicitamente listados no servidor são servidos.
+O servidor escuta em 127.0.0.1 por padrão. PORT altera a porta; HOST=0.0.0.0 permite hospedar em outro ambiente. O dashboard exige login local ou Microsoft e operadores autorizados. Configure APP_URL HTTPS, NODE_ENV=production e persistência do banco de contas conforme AUTHENTICATION.md, pois as consultas usam permissões do aplicativo. Somente os arquivos públicos explicitamente listados no servidor são servidos.
 
 ## Validar
 
     npm test
 
 Testes cobrem rotas, validação de UPN, proteção dos arquivos de código/configuração, consulta com serviço simulado, escape de HTML e paginação de 500 grupos. O teste real contra o tenant depende da configuração Azure.
+
+## Acesso ao dashboard
+
+Login com e-mail e senha ou Microsoft SSO. O cadastro real exige convite do administrador. Consulte [AUTHENTICATION.md](AUTHENTICATION.md) para configurar o App Registration, a URL de retorno e os convites.

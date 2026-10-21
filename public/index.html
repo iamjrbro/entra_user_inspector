@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Entra User Inspector · Auditoria de identidade</title><link rel="stylesheet" href="/style.css"><script src="/report.js" defer></script><script src="/dashboard.js" defer></script></head>
 <body><aside><a class="brand" href="/">◈ <span>Entra<span class="brand-sub">USER INSPECTOR</span></span></a><div class="nav-label">WORKSPACE</div><div class="nav-item">▦ <span>Auditoria de identidade</span></div><div class="aside-bottom"><span class="dot"></span> Consultas somente leitura<p>Microsoft Entra ID<br>Microsoft Graph · v1.0</p></div></aside>
-<div class="shell"><header><span>Workspace <b>/</b> Auditoria de identidade</span><span class="badge" id="mode">Conectando…</span></header><main>
+<div class="shell"><header><span>Workspace <b>/</b> Auditoria de identidade</span><div class="session-controls"><span id="session-user"></span><span class="badge" id="mode">Conectando…</span><button id="logout" type="button">Sair</button></div></header><main>
 <div class="eyebrow">VISIBILIDADE DO DIRETÓRIO</div><h1>Uma identidade.<br><span>Todos os vínculos em um lugar.</span></h1><p class="lead">Consulte funções e grupos do colaborador e exporte a auditoria para compartilhar.</p>
 <form id="lookup"><label for="upn">E-mail corporativo (UPN)</label><div class="search"><span aria-hidden="true">⌕</span><input id="upn" type="email" placeholder="nome@suaempresa.com" required maxlength="254" autocomplete="off"><button class="primary" id="consult" type="submit">Consultar identidade →</button></div></form>
 <p id="message" role="status" aria-live="polite"></p>
